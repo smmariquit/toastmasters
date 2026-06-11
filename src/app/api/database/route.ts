@@ -1,3 +1,5 @@
+// src/app/api/database/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@vercel/kv';
 

@@ -1,3 +1,5 @@
+// src/lib/database.ts
+
 import { Database, Club, Member, Meeting, GrammarianSession, AhCounterSession, TimerSession, EvaluationSession, MemberPerformanceStats, SpeechRecording } from './types';
 import { v4 as uuidv4 } from 'uuid';
 

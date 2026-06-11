@@ -1,3 +1,5 @@
+// src/components/footer.tsx
+
 import Link from 'next/link';
 
 export function Footer() {

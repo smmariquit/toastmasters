@@ -1,3 +1,5 @@
+// src/app/clubs/[id]/members/[memberId]/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';

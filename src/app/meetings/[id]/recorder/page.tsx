@@ -1,3 +1,5 @@
+// src/app/meetings/[id]/recorder/page.tsx
+
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';

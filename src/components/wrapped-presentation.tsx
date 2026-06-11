@@ -1,3 +1,5 @@
+// src/components/wrapped-presentation.tsx
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';

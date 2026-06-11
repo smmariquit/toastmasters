@@ -1,3 +1,5 @@
+// src/lib/types.ts
+
 // Database Types for Toastmasters Meeting Management
 
 export interface Club {

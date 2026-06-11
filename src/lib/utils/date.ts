@@ -1,3 +1,5 @@
+// src/lib/utils/date.ts
+
 /**
  * Safe date formatting utilities that prevent hydration mismatches.
  * Uses UTC-based formatting to ensure consistent output between server and client.
