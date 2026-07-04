@@ -1,18 +1,31 @@
 // functions/api/feedback.ts
 
+// Routed through Vercel AI Gateway instead of api.openai.com directly: Cloudflare Pages
+// Functions execute in arbitrary PoPs (including colos OpenAI geo-blocks, e.g. HK), but
+// AI Gateway's endpoint is not subject to that block. See PR #2 discussion.
 type FeedbackContext = {
   request: Request;
   env: {
-    OPENAI_API_KEY?: string;
+    AI_GATEWAY_API_KEY?: string;
   };
 };
 
+const scoreFeedbackSchema = {
+  type: 'object',
+  properties: {
+    score: { type: 'number' },
+    feedback: { type: 'string' },
+  },
+  required: ['score', 'feedback'],
+  additionalProperties: false,
+} as const;
+
 export const onRequestPost = async (context: FeedbackContext) => {
   try {
-    const apiKey = context.env.OPENAI_API_KEY;
+    const apiKey = context.env.AI_GATEWAY_API_KEY;
 
     if (!apiKey) {
-      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+      return Response.json({ error: 'AI Gateway API key not configured' }, { status: 500 });
     }
 
     const { transcription, speechType, speechTitle } = await context.request.json();
@@ -41,26 +54,64 @@ Your response must be in the following JSON format:
 
 Be encouraging but honest. Focus on actionable improvements. Consider that this is a ${speechType || 'prepared speech'}${speechTitle ? ` titled "${speechTitle}"` : ''}.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'openai/gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Please analyze this speech transcription:\n\n${transcription}` },
         ],
-        response_format: { type: 'json_object' },
+        // AI Gateway's OpenAI-compatible endpoint rejects the legacy `json_object` mode
+        // (400 invalid_request_error); it requires the json_schema structured-output shape.
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'speech_feedback',
+            schema: {
+              type: 'object',
+              properties: {
+                overallScore: { type: 'number' },
+                summary: { type: 'string' },
+                strengths: { type: 'array', items: { type: 'string' } },
+                improvements: { type: 'array', items: { type: 'string' } },
+                detailedAnalysis: {
+                  type: 'object',
+                  properties: {
+                    clarity: scoreFeedbackSchema,
+                    structure: scoreFeedbackSchema,
+                    delivery: scoreFeedbackSchema,
+                    content: scoreFeedbackSchema,
+                    engagement: scoreFeedbackSchema,
+                  },
+                  required: ['clarity', 'structure', 'delivery', 'content', 'engagement'],
+                  additionalProperties: false,
+                },
+                suggestedExercises: { type: 'array', items: { type: 'string' } },
+              },
+              required: [
+                'overallScore',
+                'summary',
+                'strengths',
+                'improvements',
+                'detailedAnalysis',
+                'suggestedExercises',
+              ],
+              additionalProperties: false,
+            },
+          },
+        },
         temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
+      console.error('AI Gateway error:', error);
       return Response.json({ error: 'Failed to generate feedback' }, { status: response.status });
     }
 
