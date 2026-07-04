@@ -9,7 +9,7 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           {/* About */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold text-[#c4a052]">
+            <h3 className="mb-4 text-lg font-semibold text-[#e8d5a8]">
               Toastmasters Hub
             </h3>
             <p className="text-sm text-white/80">
@@ -20,7 +20,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold text-[#c4a052]">
+            <h3 className="mb-4 text-lg font-semibold text-[#e8d5a8]">
               Quick Links
             </h3>
             <ul className="space-y-2 text-sm">
@@ -54,7 +54,7 @@ export function Footer() {
 
           {/* Official Resources */}
           <div>
-            <h3 className="mb-4 text-lg font-semibold text-[#c4a052]">
+            <h3 className="mb-4 text-lg font-semibold text-[#e8d5a8]">
               Official Resources
             </h3>
             <ul className="space-y-2 text-sm">
