@@ -1,25 +1,24 @@
-// src/app/api/feedback/route.ts
+// functions/api/feedback.ts
 
-import { NextRequest, NextResponse } from 'next/server';
+type FeedbackContext = {
+  request: Request;
+  env: {
+    OPENAI_API_KEY?: string;
+  };
+};
 
-export async function POST(request: NextRequest) {
+export const onRequestPost = async (context: FeedbackContext) => {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    
+    const apiKey = context.env.OPENAI_API_KEY;
+
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
+      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
 
-    const { transcription, speechType, speechTitle } = await request.json();
-    
+    const { transcription, speechType, speechTitle } = await context.request.json();
+
     if (!transcription) {
-      return NextResponse.json(
-        { error: 'No transcription provided' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'No transcription provided' }, { status: 400 });
     }
 
     const systemPrompt = `You are an expert Toastmasters speech coach and evaluator. Analyze the following speech transcription and provide detailed, constructive feedback following the Toastmasters evaluation method (Commend-Recommend-Commend).
@@ -45,7 +44,7 @@ Be encouraging but honest. Focus on actionable improvements. Consider that this 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -62,24 +61,18 @@ Be encouraging but honest. Focus on actionable improvements. Consider that this 
     if (!response.ok) {
       const error = await response.text();
       console.error('OpenAI API error:', error);
-      return NextResponse.json(
-        { error: 'Failed to generate feedback' },
-        { status: response.status }
-      );
+      return Response.json({ error: 'Failed to generate feedback' }, { status: response.status });
     }
 
     const result = await response.json();
     const feedback = JSON.parse(result.choices[0].message.content);
-    
-    return NextResponse.json({
+
+    return Response.json({
       ...feedback,
       createdAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Feedback generation error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+};

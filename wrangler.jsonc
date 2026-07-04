@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "toastmasters",
+  "pages_build_output_dir": "out",
+  "compatibility_date": "2026-07-01",
+  "kv_namespaces": [
+    {
+      "binding": "TOASTMASTERS_KV",
+      "id": "41c1890b182d4f9389bc6fc121c6b3ca"
+    }
+  ]
+}

@@ -1,29 +1,27 @@
-// src/app/api/transcribe/route.ts
+// functions/api/transcribe.ts
 
-import { NextRequest, NextResponse } from 'next/server';
+type TranscribeContext = {
+  request: Request;
+  env: {
+    OPENAI_API_KEY?: string;
+  };
+};
 
-export async function POST(request: NextRequest) {
+export const onRequestPost = async (context: TranscribeContext) => {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    
+    const apiKey = context.env.OPENAI_API_KEY;
+
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
+      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
 
-    const formData = await request.formData();
+    const formData = await context.request.formData();
     const audioFile = formData.get('audio') as File;
-    
+
     if (!audioFile) {
-      return NextResponse.json(
-        { error: 'No audio file provided' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'No audio file provided' }, { status: 400 });
     }
 
-    // Create form data for OpenAI API
     const openAIFormData = new FormData();
     openAIFormData.append('file', audioFile);
     openAIFormData.append('model', 'whisper-1');
@@ -33,7 +31,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: openAIFormData,
     });
@@ -41,24 +39,18 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text();
       console.error('OpenAI API error:', error);
-      return NextResponse.json(
-        { error: 'Failed to transcribe audio' },
-        { status: response.status }
-      );
+      return Response.json({ error: 'Failed to transcribe audio' }, { status: response.status });
     }
 
     const result = await response.json();
-    
-    return NextResponse.json({
+
+    return Response.json({
       transcription: result.text,
       duration: result.duration,
       segments: result.segments,
     });
   } catch (error) {
     console.error('Transcription error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+};
